@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Werkbriefje UX-voorstellen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky versiebalk boven, daaronder per versie een korte toelichting en één schermontwerp in een app-frame */
+:root{
+  --bg:#ECEEF2; --surface:#FFFFFF; --surface-2:#F7F8FA; --line:#E2E5EA; --ink:#141A26; --muted:#566070;
+  --accent:#2F55E4; --accent-soft:#E8EDFD; --accent-ink:#1E3FB8; --on-accent:#FFFFFF;
+  --teal:#0F9D8A; --teal-soft:#E0F3F0; --teal-ink:#0B6E61;
+  --warn:#9A5B05; --warn-soft:#FFF5E0; --warn-line:#EDD39A;
+  --ok:#157F4F; --ok-soft:#E2F5EA; --bad:#B42318; --bad-soft:#FDECEA;
+  --shadow:0 1px 2px rgba(20,26,38,.05),0 8px 24px rgba(20,26,38,.06);
+  --f-ui:'Geist',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-num:'Geist Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1117; --surface:#171B23; --surface-2:#1C212B; --line:#2A303B; --ink:#E7EAF0; --muted:#9AA3B2;
+  --accent:#7A93FF; --accent-soft:#1F2846; --accent-ink:#B4C3FF; --on-accent:#0E1117;
+  --teal:#34C6B0; --teal-soft:#123029; --teal-ink:#7BE2D2;
+  --warn:#F1B556; --warn-soft:#2C2314; --warn-line:#5B4521;
+  --ok:#52D193; --ok-soft:#11291D; --bad:#FF8478; --bad-soft:#341817;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1117; --surface:#171B23; --surface-2:#1C212B; --line:#2A303B; --ink:#E7EAF0; --muted:#9AA3B2;
+  --accent:#7A93FF; --accent-soft:#1F2846; --accent-ink:#B4C3FF; --on-accent:#0E1117;
+  --teal:#34C6B0; --teal-soft:#123029; --teal-ink:#7BE2D2;
+  --warn:#F1B556; --warn-soft:#2C2314; --warn-line:#5B4521;
+  --ok:#52D193; --ok-soft:#11291D; --bad:#FF8478; --bad-soft:#341817;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* versiebalk */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar-in{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;white-space:nowrap}
+.brand i{width:30px;height:30px;border-radius:9px;background:var(--teal);color:#fff;font-style:normal;font-weight:700;display:grid;place-items:center;font-size:14px}
+.brand small{font-weight:400;color:var(--muted)}
+.tabs{display:flex;gap:6px;overflow-x:auto;flex:1 1 400px;min-width:0;padding:2px;scrollbar-width:thin}
+.tab{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--muted)}
+.tab:hover{color:var(--ink);border-color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.nav{display:flex;gap:6px}
+.nav button{border:1px solid var(--line);background:var(--surface);border-radius:10px;width:38px;height:38px;cursor:pointer;display:grid;place-items:center}
+
+.wrap{max-width:1360px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.intro{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px 40px;margin-bottom:22px;align-items:end}
+.intro .eyebrow{font-size:13px;font-weight:600;color:var(--accent-ink);letter-spacing:.06em;text-transform:uppercase}
+.intro h1{margin:6px 0 0;font-size:clamp(24px,3vw,34px);line-height:1.15;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+.intro p{margin:0;color:var(--muted);max-width:62ch}
+.intro ul{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.intro li{font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+@media (max-width:760px){.intro{grid-template-columns:1fr}}
+
+/* app frame */
+.app{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);min-height:640px}
+.rail{flex:0 0 64px;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 0}
+.rail .logo{width:36px;height:36px;border-radius:10px;background:var(--teal);color:#fff;font-weight:700;display:grid;place-items:center;margin-bottom:12px}
+.rail span{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:var(--muted)}
+.rail span.on{background:var(--accent-soft);color:var(--accent)}
+.main{flex:1 1 auto;min-width:0;padding:22px 26px 28px;display:flex;flex-direction:column;gap:18px}
+@media (max-width:640px){.rail{display:none}.main{padding:16px}}
+.crumbs{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.crumbs b{color:var(--ink);font-weight:500}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.pad{padding:18px 22px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.between{justify-content:space-between}
+.lbl{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.h2{margin:0;font-size:17px;font-weight:600}
+.muted{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
+.pill .d{width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-acc{background:var(--accent-soft);color:var(--accent-ink)}
+.p-teal{background:var(--teal-soft);color:var(--teal-ink)}
+.p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.p-bad{background:var(--bad-soft);color:var(--bad)}
+.p-grey{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:500;font-size:14px;cursor:pointer;white-space:nowrap}
+.btn-p{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn-ghost{border-style:dashed;color:var(--accent-ink);border-color:var(--accent)}
+.kbd{font-family:var(--f-num);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:var(--surface-2)}
+.sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:10px 14px;background:var(--surface-2);white-space:nowrap}
+td{padding:12px 14px;border-top:1px solid var(--line);white-space:nowrap}
+td.r,th.r{text-align:right}
+.grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.grid7{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:480px){.grid7{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.day{padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.day .t{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.day .v{font-family:var(--f-num);font-size:28px;font-weight:600;margin:8px 0 0}
+.day .s{font-size:12px;color:var(--muted)}
+.stack{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:12px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:980px){.split{grid-template-columns:1fr}}
+.inp{display:inline-flex;align-items:center;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-family:var(--f-num);font-size:15px;min-width:84px}
+.inp.focus{border:2px solid var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.ico{width:18px;height:18px;flex:none}
+section.v[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){section.v{animation:in .25s ease-out}@keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand"><i>P</i>Werkbriefje <small>· UX-voorstellen</small></div>
+    <div class="tabs" role="tablist" aria-label="Versies" id="tabs"></div>
+    <div class="nav">
+      <button type="button" id="prev" aria-label="Vorige versie"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button type="button" id="next" aria-label="Volgende versie"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ VERSIE 1 ============ -->
+<section class="v" id="v1" data-title="Week in één oogopslag" role="tabpanel">
+  <div class="intro">
+    <div><div class="eyebrow">Versie 1</div><h1>Week in één oogopslag</h1></div>
+    <div><p>Zeven dagkaarten boven de tabel tonen per dag de uren, de begin- en eindtijd en de verdeling over kostenplaatsen. Afwijkingen vallen direct op door kleur, zonder dat je door een brede tabel hoeft te scrollen.</p>
+      <ul><li>Dagkaarten met status</li><li>Kleur per kostenplaats</li><li>Kerncijfers bovenaan</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg></span><span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></span><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / <b>Week 40 · Daan Visser</b></div><div class="row"><button class="btn" type="button" aria-label="Vorige week">‹</button><span class="btn" style="font-weight:600">Week 40 · 28 sep – 4 okt 2026</span><button class="btn" type="button" aria-label="Volgende week">›</button></div></div>
+      <div class="card pad row between" style="gap:18px 32px">
+        <div class="row" style="gap:14px"><div style="width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;font-weight:600">DV</div><div><div style="font-size:19px;font-weight:600">Daan Visser</div><div class="muted" style="font-size:14px">Van Dijk Metaalbouw B.V. · Topkracht · M&amp;T Metaalbewerking</div></div></div>
+        <div class="row" style="gap:30px"><div><div class="lbl">Gewerkt</div><div class="num" style="font-size:22px;font-weight:600">38,00 <span class="muted" style="font-size:13px;font-weight:400">/ 40,00 u</span></div></div><div><div class="lbl">Kostenplaatsen</div><div style="font-size:22px;font-weight:600">2</div></div><div><div class="lbl">Aandacht</div><div style="font-size:22px;font-weight:600;color:var(--warn)">1</div></div></div>
+        <span class="pill p-acc"><span class="d"></span>Aan zet: Flexpedia</span>
+      </div>
+      <div class="grid7">
+        <div class="day" style="border:2px solid var(--accent);box-shadow:0 0 0 4px var(--accent-soft)"><div class="t"><span>Ma 28</span><span style="color:var(--ok)">✓</span></div><div class="v">8,00</div><div class="s num">07:00 – 15:30</div><div class="stack"><div style="flex:5;background:var(--accent)"></div><div style="flex:3;background:var(--teal)"></div></div></div>
+        <div class="day"><div class="t"><span>Di 29</span><span style="color:var(--ok)">✓</span></div><div class="v">8,00</div><div class="s num">07:00 – 15:30</div><div class="stack"><div style="flex:6;background:var(--accent)"></div><div style="flex:2;background:var(--teal)"></div></div></div>
+        <div class="day"><div class="t"><span>Wo 30</span><span style="color:var(--ok)">✓</span></div><div class="v">8,00</div><div class="s num">07:00 – 15:30</div><div class="stack"><div style="flex:1;background:var(--accent)"></div></div></div>
+        <div class="day"><div class="t"><span>Do 1</span><span style="color:var(--ok)">✓</span></div><div class="v">8,00</div><div class="s num">07:00 – 15:30</div><div class="stack"><div style="flex:1;background:var(--accent)"></div></div></div>
+        <div class="day" style="background:var(--warn-soft);border-color:var(--warn-line)"><div class="t"><span>Vr 2</span><span style="color:var(--warn)">!</span></div><div class="v">6,00</div><div class="s" style="color:var(--warn)">2 u onder contract</div><div class="stack"><div style="flex:1;background:var(--accent)"></div></div></div>
+        <div class="day" style="background:var(--surface-2)"><div class="t muted"><span>Za 3</span></div><div class="v muted">—</div><div class="s">Geen uren</div></div>
+        <div class="day" style="background:var(--surface-2)"><div class="t muted"><span>Zo 4</span></div><div class="v muted">—</div><div class="s">Geen uren</div></div>
+      </div>
+      <div class="card">
+        <div class="pad row between" style="border-bottom:1px solid var(--line)"><h2 class="h2">Maandag 28 september</h2><div class="row" style="gap:6px"><span class="pill p-acc"><span class="sw" style="background:var(--accent)"></span>KP-2187 · Montage – Zuidas</span><span class="pill p-teal"><span class="sw" style="background:var(--teal)"></span>KP-2190 · Hal 3 – Lasafdeling</span></div></div>
+        <div class="scroll"><table><thead><tr><th>Component</th><th>Kostenplaats</th><th class="r">Aantal</th><th class="r">Tarief</th><th class="r">Bedrag</th></tr></thead><tbody>
+          <tr><td><b style="font-weight:500">Normale uren</b></td><td><span class="pill p-acc">KP-2187</span></td><td class="r num">5,00</td><td class="r num muted">€ 39,00</td><td class="r num">€ 195,00</td></tr>
+          <tr><td><b style="font-weight:500">Normale uren</b></td><td><span class="pill p-teal">KP-2190</span></td><td class="r num">3,00</td><td class="r num muted">€ 39,00</td><td class="r num">€ 117,00</td></tr>
+          <tr><td><b style="font-weight:500">Reiskosten woon-werk</b></td><td class="muted">—</td><td class="r num">32 km</td><td class="r num muted">€ 0,23</td><td class="r num">€ 7,36</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 2 ============ -->
+<section class="v" id="v2" data-title="Snelle invoer" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 2</div><h1>Snelle invoer met begin, eind en pauze</h1></div>
+    <div><p>Medewerkers en inleners denken in tijden, niet in decimalen. Je vult begin, eind en pauze in en Paydia rekent de uren uit. Met één klik kopieer je een dag naar de rest van de week, en alles werkt met het toetsenbord.</p>
+      <ul><li>Tijden in plaats van decimalen</li><li>Kopieer naar andere dagen</li><li>Sneltoetsen</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / <b>Week 40 · Daan Visser</b> / Uren invoeren</div><div class="row"><button class="btn" type="button">Zelfde als vorige week</button><button class="btn btn-p" type="button">Opslaan</button></div></div>
+      <div class="card">
+        <div class="scroll"><table>
+          <thead><tr><th>Dag</th><th>Begin</th><th>Eind</th><th>Pauze</th><th class="r">Uren</th><th>Component</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><b style="font-weight:600">Ma 28-09</b></td><td><span class="inp">07:00</span></td><td><span class="inp">15:30</span></td><td><span class="inp">0:30</span></td><td class="r num" style="font-size:16px;font-weight:600">8,00</td><td>Normale uren</td><td><button class="btn" type="button" style="color:var(--accent-ink)">Kopieer naar di–vr</button></td></tr>
+            <tr style="background:var(--accent-soft)"><td><b style="font-weight:600">Di 29-09</b></td><td><span class="inp">07:00</span></td><td><span class="inp focus">15:3<span style="opacity:.6">|</span></span></td><td><span class="inp">0:30</span></td><td class="r num" style="font-size:16px;font-weight:600;color:var(--accent-ink)">8,00</td><td>Normale uren</td><td class="muted" style="font-size:13px">Enter = volgende dag</td></tr>
+            <tr><td><b style="font-weight:600">Wo 30-09</b></td><td><span class="inp muted">––:––</span></td><td><span class="inp muted">––:––</span></td><td><span class="inp muted">0:30</span></td><td class="r num muted">—</td><td class="muted">Normale uren</td><td></td></tr>
+            <tr><td><b style="font-weight:600">Do 01-10</b></td><td><span class="inp muted">––:––</span></td><td><span class="inp muted">––:––</span></td><td><span class="inp muted">0:30</span></td><td class="r num muted">—</td><td class="muted">Normale uren</td><td></td></tr>
+            <tr><td><b style="font-weight:600">Vr 02-10</b></td><td><span class="inp muted">––:––</span></td><td><span class="inp muted">––:––</span></td><td><span class="inp muted">0:30</span></td><td class="r num muted">—</td><td class="muted">Normale uren</td><td></td></tr>
+          </tbody></table></div>
+        <div class="pad row between" style="border-top:1px solid var(--line)">
+          <div class="row" style="gap:16px;font-size:13px" ><span class="muted">Sneltoetsen</span><span><span class="kbd">Tab</span> volgend veld</span><span><span class="kbd">Enter</span> volgende dag</span><span><span class="kbd">Ctrl</span> + <span class="kbd">D</span> dag dupliceren</span><span><span class="kbd">Ctrl</span> + <span class="kbd">S</span> opslaan</span></div>
+          <div class="num" style="font-weight:600">Week tot nu toe: 16,00 u</div>
+        </div>
+      </div>
+      <div class="card pad row" style="gap:14px;background:var(--surface-2)">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="color:var(--accent)"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div style="flex:1 1 300px;min-width:0"><b style="font-weight:600">Pauze volgens cao ingevuld.</b> <span class="muted">Bij een werkdag langer dan 5,5 uur stelt Paydia 30 minuten pauze voor. Je kunt dit per dag aanpassen.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 3 ============ -->
+<section class="v" id="v3" data-title="Kostenplaatsen verdelen" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 3</div><h1>Kostenplaatsen per dag verdelen</h1></div>
+    <div><p>Op een dag met meerdere kostenplaatsen zie je één balk van de hele dag, opgedeeld in kleuren. Je verschuift uren met plus en min of kiest een snelle verdeling. Zolang er uren over zijn, zie je hoeveel nog verdeeld moet worden.</p>
+      <ul><li>Dagbalk met verdeling</li><li>Nog te verdelen</li><li>Snelle verdelingen</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / Week 40 · Daan Visser / <b>Maandag 28 september</b></div><span class="pill p-ok"><span class="d"></span>Dagtotaal klopt</span></div>
+      <div class="card pad" style="display:flex;flex-direction:column;gap:16px">
+        <div class="row between"><h2 class="h2">Verdeling 07:00 – 15:30 · <span class="num">8,00 u</span></h2><div class="row" style="gap:6px"><button class="btn" type="button">Gelijk verdelen</button><button class="btn" type="button">Zelfde als gisteren</button></div></div>
+        <div style="display:flex;height:56px;border-radius:12px;overflow:hidden;gap:3px">
+          <div style="flex:5;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;padding:0 16px;font-weight:600;gap:8px"><span class="num">5,00 u</span><span style="font-weight:400;opacity:.85">KP-2187</span></div>
+          <div style="flex:3;background:var(--teal);color:#fff;display:flex;align-items:center;padding:0 16px;font-weight:600;gap:8px"><span class="num">3,00 u</span><span style="font-weight:400;opacity:.9">KP-2190</span></div>
+        </div>
+        <div class="row num muted" style="justify-content:space-between;font-size:12px"><span>07:00</span><span>09:00</span><span>11:00</span><span>13:00</span><span>15:30</span></div>
+      </div>
+      <div class="card">
+        <div class="scroll"><table><thead><tr><th>Kostenplaats</th><th>Component</th><th>Uren</th><th class="r">Bedrag</th><th></th></tr></thead><tbody>
+          <tr><td><span class="row" style="gap:10px"><span class="sw" style="background:var(--accent);width:12px;height:12px"></span><b style="font-weight:600">KP-2187</b><span class="muted">Montage – Zuidas</span></span></td><td>Normale uren</td><td><span class="row" style="gap:6px"><button class="btn" type="button" aria-label="Minder">−</button><span class="inp" style="justify-content:center">5,00</span><button class="btn" type="button" aria-label="Meer">+</button></span></td><td class="r num">€ 195,00</td><td><button class="btn" type="button" aria-label="Regel verwijderen">✕</button></td></tr>
+          <tr><td><span class="row" style="gap:10px"><span class="sw" style="background:var(--teal);width:12px;height:12px"></span><b style="font-weight:600">KP-2190</b><span class="muted">Hal 3 – Lasafdeling</span></span></td><td>Normale uren</td><td><span class="row" style="gap:6px"><button class="btn" type="button" aria-label="Minder">−</button><span class="inp focus" style="justify-content:center">3,00</span><button class="btn" type="button" aria-label="Meer">+</button></span></td><td class="r num">€ 117,00</td><td><button class="btn" type="button" aria-label="Regel verwijderen">✕</button></td></tr>
+        </tbody></table></div>
+        <div class="pad row between" style="border-top:1px solid var(--line)"><button class="btn btn-ghost" type="button">+ Kostenplaats toevoegen</button><div class="row" style="gap:18px"><span class="muted">Nog te verdelen</span><span class="num" style="font-size:18px;font-weight:600;color:var(--ok)">0,00 u ✓</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 4 ============ -->
+<section class="v" id="v4" data-title="Flow als tijdlijn" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 4</div><h1>Flow als tijdlijn: wie is aan zet</h1></div>
+    <div><p>De losse pills worden één tijdlijn. Per stap zie je wie het deed en wanneer. De huidige stap laat zien hoe lang het werkbriefje al wacht en vóór wanneer het verwerkt moet zijn. Terughalen staat direct bij de stap waar dat kan.</p>
+      <ul><li>Stappen met tijdstip en persoon</li><li>Wachttijd en deadline</li><li>Activiteitenlog</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / <b>Plaatsing #171 · Lotte de Jong · Week 40</b></div><span class="pill p-warn"><span class="d"></span>Wacht op goedkeuring</span></div>
+      <div class="card pad">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative" class="steps">
+          <div style="padding-right:12px">
+            <div class="row" style="gap:10px"><span style="width:30px;height:30px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-weight:700">✓</span><div style="flex:1;height:2px;background:var(--ok)"></div></div>
+            <div style="margin-top:12px;font-weight:600">Medewerker</div><div class="muted" style="font-size:13px">Ingediend door Lotte de Jong</div><div class="num muted" style="font-size:13px">01-10 17:02</div>
+          </div>
+          <div style="padding-right:12px">
+            <div class="row" style="gap:10px"><span style="width:30px;height:30px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-weight:700">✓</span><div style="flex:1;height:2px;background:var(--accent)"></div></div>
+            <div style="margin-top:12px;font-weight:600">Inlener</div><div class="muted" style="font-size:13px">Goedgekeurd door J. Bakker</div><div class="num muted" style="font-size:13px">02-10 09:14</div>
+            <button class="btn" type="button" style="margin-top:10px;min-height:34px;font-size:13px">Terughalen</button>
+          </div>
+          <div style="padding-right:12px">
+            <div class="row" style="gap:10px"><span style="width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:700;box-shadow:0 0 0 6px var(--accent-soft)">3</span><div style="flex:1;height:2px;background:var(--line)"></div></div>
+            <div style="margin-top:12px;font-weight:600;color:var(--accent-ink)">Flexpedia · aan zet</div><div class="muted" style="font-size:13px">Wacht sinds 2 dagen</div><div class="num" style="font-size:13px;color:var(--warn)">Verwerken vóór ma 05-10 12:00</div>
+          </div>
+          <div>
+            <div class="row" style="gap:10px"><span style="width:30px;height:30px;border-radius:50%;border:2px solid var(--line);color:var(--muted);display:grid;place-items:center;font-weight:600">4</span></div>
+            <div style="margin-top:12px;font-weight:600" class="muted">Verwerkt</div><div class="muted" style="font-size:13px">Naar verloning en facturatie</div>
+          </div>
+        </div>
+      </div>
+      <div class="split">
+        <div class="card">
+          <div class="pad" style="border-bottom:1px solid var(--line)"><h2 class="h2">Activiteit</h2></div>
+          <div class="pad" style="display:flex;flex-direction:column;gap:16px">
+            <div class="row" style="align-items:flex-start;gap:12px"><span class="pill p-acc" style="height:22px">Nu</span><div style="flex:1 1 240px;min-width:0"><b style="font-weight:500">Bij Flexpedia ter controle</b><div class="muted" style="font-size:13px">Bijlagevereiste: getekend urenbriefje aanwezig</div></div></div>
+            <div class="row" style="align-items:flex-start;gap:12px"><span class="num muted" style="font-size:13px;width:84px">02-10 09:14</span><div style="flex:1 1 240px;min-width:0"><b style="font-weight:500">J. Bakker keurde goed</b><div class="muted" style="font-size:13px">"Klopt, maandag deels in Hal 3."</div></div></div>
+            <div class="row" style="align-items:flex-start;gap:12px"><span class="num muted" style="font-size:13px;width:84px">02-10 08:50</span><div style="flex:1 1 240px;min-width:0"><b style="font-weight:500">J. Bakker wijzigde ma 28-09</b><div class="muted" style="font-size:13px">Normale uren 8,00 → 5,00 + 3,00 op KP-2190</div></div></div>
+            <div class="row" style="align-items:flex-start;gap:12px"><span class="num muted" style="font-size:13px;width:84px">01-10 17:02</span><div style="flex:1 1 240px;min-width:0"><b style="font-weight:500">Lotte de Jong diende in</b><div class="muted" style="font-size:13px">37,50 uur · 1 bijlage</div></div></div>
+          </div>
+        </div>
+        <div class="card pad" style="display:flex;flex-direction:column;gap:12px">
+          <div class="lbl">Volgende stap</div>
+          <div style="font-size:16px;font-weight:600">Definitief goedkeuren door Flexpedia</div>
+          <div class="muted" style="font-size:14px">Na goedkeuring gaat het werkbriefje naar verwerking. Daarna kan niemand het meer terughalen.</div>
+          <div class="row"><button class="btn btn-p" type="button">Definitief goedkeuren</button><button class="btn" type="button">Terugsturen</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 5 ============ -->
+<section class="v" id="v5" data-title="Vaste actiebalk" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 5</div><h1>Vaste actiebalk met live totalen</h1></div>
+    <div><p>Onderaan staat altijd één balk met de totalen die tellen: uren, loonwaarde, factuurwaarde en bijlagen. Daarnaast staat één duidelijke hoofdactie. De andere acties uit het huidige menu met acht opties gaan achter ‘Meer’.</p>
+      <ul><li>Totalen altijd in beeld</li><li>Eén hoofdactie</li><li>Minder keuzestress</li></ul></div>
+  </div>
+  <div class="app" style="flex-direction:row">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main" style="padding-bottom:0">
+      <div class="crumbs"><div>Werkbriefjes / <b>Plaatsing #227 · Daan Visser · Week 40</b></div><span class="pill p-acc"><span class="d"></span>Aan zet: Flexpedia</span></div>
+      <div class="card">
+        <div class="scroll"><table><thead><tr><th>Component</th><th>Kostenplaats</th><th class="r">Ma</th><th class="r">Di</th><th class="r">Wo</th><th class="r">Do</th><th class="r">Vr</th><th class="r">Za</th><th class="r">Zo</th><th class="r">Totaal</th></tr></thead><tbody>
+          <tr><td>Normale uren</td><td><span class="pill p-acc">KP-2187</span></td><td class="r num">5,00</td><td class="r num">6,00</td><td class="r num">8,00</td><td class="r num">8,00</td><td class="r num">6,00</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num" style="font-weight:600">33,00</td></tr>
+          <tr><td>Normale uren</td><td><span class="pill p-teal">KP-2190</span></td><td class="r num">3,00</td><td class="r num">2,00</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num" style="font-weight:600">5,00</td></tr>
+          <tr><td>Reiskosten woon-werk</td><td class="muted">—</td><td class="r num">7,36</td><td class="r num">7,36</td><td class="r num">7,36</td><td class="r num">7,36</td><td class="r num">7,36</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num" style="font-weight:600">€ 36,80</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card pad muted" style="font-size:14px;border-style:dashed;background:transparent">Declaraties, bijlagen en toelichting staan hieronder. De balk blijft onderaan staan terwijl je scrolt.</div>
+      <div style="flex:1"></div>
+      <div style="position:sticky;bottom:0;margin:0 -26px;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(20,26,38,.06);padding:14px 26px" class="row between">
+        <div class="row" style="gap:28px">
+          <div><div class="lbl">Uren</div><div class="num" style="font-size:18px;font-weight:600">38,00</div></div>
+          <div><div class="lbl">Loonwaarde</div><div class="num" style="font-size:18px;font-weight:600">€ 836,00</div></div>
+          <div><div class="lbl">Factuurwaarde</div><div class="num" style="font-size:18px;font-weight:600">€ 1.482,00</div></div>
+          <div><div class="lbl">Marge</div><div class="num" style="font-size:18px;font-weight:600;color:var(--ok)">€ 646,00</div></div>
+          <div><div class="lbl">Bijlagen</div><div style="font-size:18px;font-weight:600">2 / 2 <span style="color:var(--ok)">✓</span></div></div>
+        </div>
+        <div class="row" style="gap:8px"><button class="btn" type="button">Meer ▾</button><button class="btn" type="button">Terugsturen</button><button class="btn btn-p" type="button" style="padding:0 22px">Definitief goedkeuren</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 6 ============ -->
+<section class="v" id="v6" data-title="Inline controles" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 6</div><h1>Inline controles en een checklist voor indienen</h1></div>
+    <div><p>Fouten zie je op de plek waar ze zitten, niet pas bij het indienen. Rechts staat een checklist met wat nog ontbreekt, en elk punt heeft een knop om het op te lossen. Zolang er een blokkade is, zegt de indienknop waarom hij uitstaat.</p>
+      <ul><li>Markering in de cel</li><li>Oplossen vanuit de checklist</li><li>Waarschuwing vs. blokkade</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / <b>Week 40 · Daan Visser</b></div><span class="pill p-grey"><span class="d"></span>Concept</span></div>
+      <div class="split">
+        <div class="card">
+          <div class="scroll"><table><thead><tr><th>Component</th><th class="r">Ma</th><th class="r">Di</th><th class="r">Wo</th><th class="r">Do</th><th class="r">Vr</th><th class="r">Totaal</th></tr></thead><tbody>
+            <tr><td>Normale uren</td><td class="r num">8,00</td><td class="r num">8,00</td><td class="r num">8,00</td><td class="r num">8,00</td><td class="r num" style="background:var(--warn-soft);box-shadow:inset 0 -2px 0 var(--warn);color:var(--warn);font-weight:600">6,00 !</td><td class="r num" style="font-weight:600">38,00</td></tr>
+            <tr><td>Overwerk 125%</td><td class="r num muted">0,00</td><td class="r num" style="background:var(--bad-soft);box-shadow:inset 0 -2px 0 var(--bad);color:var(--bad);font-weight:600">4,50 ✕</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num" style="font-weight:600">4,50</td></tr>
+          </tbody></table></div>
+          <div class="pad" style="border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+            <div class="row" style="gap:10px;align-items:flex-start"><span class="pill p-bad" style="height:22px">Blokkeert</span><div style="flex:1 1 260px;min-width:0;font-size:14px"><b style="font-weight:600">Di 29-09 · 12,50 uur gewerkt.</b> <span class="muted">De Arbeidstijdenwet staat maximaal 12 uur per dienst toe. Pas de uren aan of vraag een uitzondering aan.</span></div></div>
+            <div class="row" style="gap:10px;align-items:flex-start"><span class="pill p-warn" style="height:22px">Let op</span><div style="flex:1 1 260px;min-width:0;font-size:14px"><b style="font-weight:600">Vr 02-10 · 2 uur onder contracturen.</b> <span class="muted">Voeg een toelichting toe, zodat de inlener weet waarom.</span></div></div>
+          </div>
+        </div>
+        <div class="card pad" style="display:flex;flex-direction:column;gap:14px">
+          <div class="row between"><h2 class="h2">Klaar om in te dienen?</h2><span class="num muted">2 / 4</span></div>
+          <div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="width:50%;height:100%;background:var(--accent)"></div></div>
+          <div class="row" style="gap:10px"><span style="color:var(--ok);font-weight:700">✓</span><span>Alle werkdagen ingevuld</span></div>
+          <div class="row" style="gap:10px"><span style="color:var(--ok);font-weight:700">✓</span><span>Kostenplaats op elke regel</span></div>
+          <div class="row" style="gap:10px;align-items:flex-start"><span style="color:var(--bad);font-weight:700">✕</span><div style="flex:1;min-width:0">Getekend urenbriefje ontbreekt<div class="muted" style="font-size:13px">Verplicht bij indienen voor deze inlener</div><button class="btn" type="button" style="margin-top:8px;min-height:34px;font-size:13px">Bijlage uploaden</button></div></div>
+          <div class="row" style="gap:10px;align-items:flex-start"><span style="color:var(--bad);font-weight:700">✕</span><div style="flex:1;min-width:0">Di 29-09 boven 12 uur<div class="muted" style="font-size:13px">Arbeidstijdenwet</div><button class="btn" type="button" style="margin-top:8px;min-height:34px;font-size:13px">Naar dinsdag</button></div></div>
+          <button class="btn btn-p" type="button" disabled style="opacity:.5;justify-content:center;cursor:not-allowed">Indienen bij inlener</button>
+          <div class="muted" style="font-size:13px;text-align:center">Los eerst 2 punten op</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 7 ============ -->
+<section class="v" id="v7" data-title="Bijlagen in de regel" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 7</div><h1>Bijlagen in de regel, met preview</h1></div>
+    <div><p>De bijlage hoort bij de kostensoort, dus staat hij ook in die regel. Je sleept een bon direct op de juiste regel en ziet meteen een voorbeeld. Of de bijlage naar de klant gaat, volgt uit de kostensoort en staat er altijd bij.</p>
+      <ul><li>Slepen op de regel</li><li>Voorbeeld zonder te downloaden</li><li>Naar klant of intern</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / Plaatsing #171 / <b>Declaraties</b></div><span class="pill p-grey">Bijlagen · 2</span></div>
+      <div class="split">
+        <div class="card">
+          <div class="scroll"><table><thead><tr><th>Kostensoort</th><th>Factureren</th><th class="r">Bedrag</th><th>Bijlage</th></tr></thead><tbody>
+            <tr style="background:var(--accent-soft)"><td><b style="font-weight:600">Parkeerkosten</b><div class="muted" style="font-size:13px">Wo 30-09</div></td><td><span class="pill p-ok"><span class="d"></span>Wordt gefactureerd</span></td><td class="r num">€ 12,50</td><td><span class="row" style="gap:10px"><span style="width:38px;height:46px;border-radius:6px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--warn)">JPG</span><span><span style="font-weight:500">Parkeerbon_30-09.jpg</span><br><span class="pill p-ok" style="height:22px;margin-top:4px">Naar klant</span></span></span></td></tr>
+            <tr><td><b style="font-weight:600">Reiskosten woon-werk</b><div class="muted" style="font-size:13px">Ma–vr</div></td><td><span class="pill p-grey"><span class="d"></span>Niet gefactureerd</span></td><td class="r num">€ 36,80</td><td><span class="row" style="gap:10px"><span style="width:38px;height:46px;border-radius:6px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--bad)">PDF</span><span><span style="font-weight:500">OV-abonnement_oktober.pdf</span><br><span class="pill p-grey" style="height:22px;margin-top:4px">Intern · niet naar klant</span></span></span></td></tr>
+            <tr><td><b style="font-weight:600">Gereedschap</b><div class="muted" style="font-size:13px">Do 01-10</div></td><td><span class="pill p-ok"><span class="d"></span>Wordt gefactureerd</span></td><td class="r num">€ 24,95</td><td><span style="display:inline-flex;align-items:center;gap:8px;border:2px dashed var(--accent);border-radius:10px;padding:10px 14px;color:var(--accent-ink);font-size:13px;font-weight:500">↑ Sleep de bon hierheen</span></td></tr>
+          </tbody></table></div>
+        </div>
+        <div class="card pad" style="display:flex;flex-direction:column;gap:14px">
+          <div class="row between"><h2 class="h2">Parkeerbon_30-09.jpg</h2><button class="btn" type="button" aria-label="Sluiten">✕</button></div>
+          <div style="border-radius:12px;background:var(--surface-2);border:1px solid var(--line);padding:18px;display:grid;place-items:center">
+            <div style="width:170px;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:14px 12px;font-family:var(--f-num);font-size:11px;line-height:1.6;box-shadow:var(--shadow)">
+              <div style="text-align:center;font-weight:600">P+R ZUIDAS</div><div style="text-align:center" class="muted">30-09-2026</div>
+              <div style="border-top:1px dashed var(--line);margin:8px 0"></div>
+              <div class="row between"><span>In</span><span>07:42</span></div><div class="row between"><span>Uit</span><span>16:05</span></div>
+              <div style="border-top:1px dashed var(--line);margin:8px 0"></div>
+              <div class="row between" style="font-weight:600"><span>Totaal</span><span>€ 12,50</span></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px"><span class="muted">Kostensoort</span><span>Parkeerkosten</span><span class="muted">Zichtbaar voor</span><span style="color:var(--ok);font-weight:500">Inlener, op de factuur</span><span class="muted">Geüpload</span><span>Daan Visser · 30-09 16:20</span></div>
+          <div class="row"><button class="btn" type="button">Andere kostensoort</button><button class="btn" type="button">Vervangen</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 8 ============ -->
+<section class="v" id="v8" data-title="Werklijst" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 8</div><h1>Werklijst met tabs en bulkacties</h1></div>
+    <div><p>Het overzicht wordt een werklijst. Bovenaan staat wat op jou wacht, met aantallen. Je selecteert meerdere werkbriefjes en keurt ze in één keer goed. Een mini-weekgrafiek per regel laat afwijkende weken zien zonder iets open te klappen.</p>
+      <ul><li>‘Wacht op mij’ als start</li><li>Bulk goedkeuren</li><li>Opgeslagen filters</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="row between"><h2 style="margin:0;font-size:24px;font-weight:600">Werkbriefjes</h2><button class="btn btn-p" type="button">+ Werkbriefje</button></div>
+      <div class="row" style="gap:4px;border-bottom:1px solid var(--line)">
+        <span style="padding:10px 14px;border-bottom:2px solid var(--accent);font-weight:600;color:var(--accent-ink)">Wacht op mij <span class="pill p-acc" style="height:22px">12</span></span>
+        <span style="padding:10px 14px" class="muted">Teruggestuurd <span class="pill p-bad" style="height:22px">2</span></span>
+        <span style="padding:10px 14px" class="muted">Concept <span class="pill p-grey" style="height:22px">5</span></span>
+        <span style="padding:10px 14px" class="muted">Verwerkt</span>
+        <span style="padding:10px 14px" class="muted">Alles</span>
+      </div>
+      <div class="row" style="gap:8px"><span class="pill p-grey">Week 40 ✕</span><span class="pill p-grey">Inlener: Van Dijk Metaalbouw ✕</span><span class="pill p-grey">Met afwijking ✕</span><button class="btn btn-ghost" type="button" style="min-height:30px;font-size:13px">Filter opslaan</button></div>
+      <div class="card" style="border-color:var(--accent)">
+        <div class="pad row between" style="background:var(--accent-soft);border-radius:14px 14px 0 0;padding-block:12px"><b style="font-weight:600;color:var(--accent-ink)">3 geselecteerd</b><div class="row" style="gap:8px"><button class="btn" type="button">Exporteren</button><button class="btn" type="button">Terugsturen</button><button class="btn btn-p" type="button">3 goedkeuren</button></div></div>
+        <div class="scroll"><table><thead><tr><th style="width:40px"><span aria-hidden="true">☐</span></th><th>Medewerker</th><th>Inlener</th><th>Week</th><th>Uren per dag</th><th class="r">Totaal</th><th>Status</th></tr></thead><tbody>
+          <tr><td style="color:var(--accent)">☑</td><td><b style="font-weight:500">Daan Visser</b></td><td>Van Dijk Metaalbouw B.V.</td><td class="num">40</td><td><span style="display:inline-flex;align-items:flex-end;gap:3px;height:24px"><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:18px;background:var(--warn);border-radius:2px"></i><i style="width:7px;height:2px;background:var(--line)"></i><i style="width:7px;height:2px;background:var(--line)"></i></span></td><td class="r num">38,00</td><td><span class="pill p-warn"><span class="d"></span>1 afwijking</span></td></tr>
+          <tr><td style="color:var(--accent)">☑</td><td><b style="font-weight:500">Lotte de Jong</b></td><td>Bakker Constructie B.V.</td><td class="num">40</td><td><span style="display:inline-flex;align-items:flex-end;gap:3px;height:24px"><i style="width:7px;height:20px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:21px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:2px;background:var(--line)"></i><i style="width:7px;height:2px;background:var(--line)"></i></span></td><td class="r num">37,50</td><td><span class="pill p-ok"><span class="d"></span>Compleet</span></td></tr>
+          <tr><td style="color:var(--accent)">☑</td><td><b style="font-weight:500">Sanne Bakker</b></td><td>Jansen Techniek B.V.</td><td class="num">40</td><td><span style="display:inline-flex;align-items:flex-end;gap:3px;height:24px"><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:2px;background:var(--line)"></i><i style="width:7px;height:2px;background:var(--line)"></i></span></td><td class="r num">40,00</td><td><span class="pill p-ok"><span class="d"></span>Compleet</span></td></tr>
+          <tr><td class="muted">☐</td><td><b style="font-weight:500">Ruben Mulder</b></td><td>Smit Installaties B.V.</td><td class="num">40</td><td><span style="display:inline-flex;align-items:flex-end;gap:3px;height:24px"><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--bad);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:12px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:2px;background:var(--line)"></i></span></td><td class="r num">45,00</td><td><span class="pill p-bad"><span class="d"></span>Bijlage ontbreekt</span></td></tr>
+          <tr><td class="muted">☐</td><td><b style="font-weight:500">Fleur de Vries</b></td><td>Mulder Bouw B.V.</td><td class="num">40</td><td><span style="display:inline-flex;align-items:flex-end;gap:3px;height:24px"><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:2px;background:var(--line)"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:24px;background:var(--accent);border-radius:2px"></i><i style="width:7px;height:2px;background:var(--line)"></i><i style="width:7px;height:2px;background:var(--line)"></i></span></td><td class="r num">32,00</td><td><span class="pill p-ok"><span class="d"></span>Compleet</span></td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 9 ============ -->
+<section class="v" id="v9" data-title="Mobiele invoer" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 9</div><h1>Mobiele invoer voor de medewerker</h1></div>
+    <div><p>Medewerkers vullen hun uren vaak op de bouwplaats in. Op de telefoon werkt het per dag: grote tijdvelden, één knop om een foto van een bon te maken en onderin een duidelijke knop om in te dienen. De weekstrip bovenaan laat zien welke dagen nog leeg zijn.</p>
+      <ul><li>Per dag in plaats van per week</li><li>Foto van bon direct koppelen</li><li>Grote knoppen</li></ul></div>
+  </div>
+  <div style="display:flex;justify-content:center;padding:10px 0">
+    <div style="width:min(390px,100%);border-radius:40px;border:10px solid var(--ink);background:var(--bg);overflow:hidden;box-shadow:var(--shadow)">
+      <div style="background:var(--surface);padding:22px 18px 14px;border-bottom:1px solid var(--line)">
+        <div class="row between"><div><div class="muted" style="font-size:13px">Week 40 · Van Dijk Metaalbouw</div><div style="font-size:20px;font-weight:600">Maandag 28 sep</div></div><span class="pill p-ok"><span class="d"></span>8,00 u</span></div>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:14px;text-align:center;font-size:12px">
+          <div style="background:var(--accent);color:var(--on-accent);border-radius:10px;padding:6px 0"><div>Ma</div><b>8</b></div>
+          <div style="background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:6px 0"><div>Di</div><b>8</b></div>
+          <div style="border:1px dashed var(--line);border-radius:10px;padding:6px 0" class="muted"><div>Wo</div><b>–</b></div>
+          <div style="border:1px dashed var(--line);border-radius:10px;padding:6px 0" class="muted"><div>Do</div><b>–</b></div>
+          <div style="border:1px dashed var(--line);border-radius:10px;padding:6px 0" class="muted"><div>Vr</div><b>–</b></div>
+          <div style="border-radius:10px;padding:6px 0" class="muted"><div>Za</div><b>–</b></div>
+          <div style="border-radius:10px;padding:6px 0" class="muted"><div>Zo</div><b>–</b></div>
+        </div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div class="card pad" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div class="lbl">Begin</div><div class="num" style="font-size:30px;font-weight:600;border:2px solid var(--accent);border-radius:12px;padding:8px 12px;margin-top:6px">07:00</div></div>
+          <div><div class="lbl">Eind</div><div class="num" style="font-size:30px;font-weight:600;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-top:6px">15:30</div></div>
+          <div><div class="lbl">Pauze</div><div class="num" style="font-size:20px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px">0:30</div></div>
+          <div><div class="lbl">Kostenplaats</div><div style="font-size:15px;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:6px"><span class="sw" style="background:var(--accent)"></span> KP-2187</div></div>
+        </div>
+        <button class="btn" type="button" style="justify-content:center;min-height:52px;font-size:15px"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Foto van bon maken</button>
+        <button class="btn btn-ghost" type="button" style="justify-content:center;min-height:46px">+ Tweede kostenplaats</button>
+        <div class="muted" style="font-size:13px;text-align:center">Automatisch opgeslagen · 07:58</div>
+      </div>
+      <div style="padding:12px 16px 26px;background:var(--surface);border-top:1px solid var(--line)"><button class="btn btn-p" type="button" style="width:100%;justify-content:center;min-height:52px;font-size:16px">Volgende dag →</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERSIE 10 ============ -->
+<section class="v" id="v10" data-title="Wijzigingen en opmerkingen" role="tabpanel" hidden>
+  <div class="intro">
+    <div><div class="eyebrow">Versie 10</div><h1>Wijzigingen en opmerkingen per regel</h1></div>
+    <div><p>Elke revisie laat zien wat er precies is veranderd, door wie en wanneer, met de oude waarde doorgestreept. Opmerkingen hangen aan een cel in plaats van in een los veld. Zo zie je meteen waarom een inlener uren heeft aangepast.</p>
+      <ul><li>Verschil tussen revisies</li><li>Opmerking op een cel</li><li>Iemand noemen met @</li></ul></div>
+  </div>
+  <div class="app">
+    <nav class="rail" aria-hidden="true"><div class="logo">P</div><span class="on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span></nav>
+    <div class="main">
+      <div class="crumbs"><div>Werkbriefjes / <b>Plaatsing #227 · Revisie 6</b></div><div class="row" style="gap:6px"><span class="pill p-grey">Vergelijk met revisie 5</span><span class="pill p-acc">2 wijzigingen</span></div></div>
+      <div class="split">
+        <div class="card">
+          <div class="scroll"><table><thead><tr><th>Component</th><th>Kostenplaats</th><th class="r">Ma</th><th class="r">Di</th><th class="r">Wo</th><th class="r">Totaal</th></tr></thead><tbody>
+            <tr><td>Normale uren</td><td><span class="pill p-acc">KP-2187</span></td><td class="r num" style="background:var(--warn-soft);position:relative"><span class="muted" style="text-decoration:line-through;font-size:12px;margin-right:6px">8,00</span><b style="font-weight:600">5,00</b><span style="position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--accent)" aria-label="Opmerking"></span></td><td class="r num">8,00</td><td class="r num">8,00</td><td class="r num" style="font-weight:600">35,00</td></tr>
+            <tr style="background:var(--ok-soft)"><td>Normale uren <span class="pill p-ok" style="height:20px;font-size:11px">Nieuw</span></td><td><span class="pill p-teal">KP-2190</span></td><td class="r num"><b style="font-weight:600">3,00</b></td><td class="r num muted">0,00</td><td class="r num muted">0,00</td><td class="r num" style="font-weight:600">3,00</td></tr>
+          </tbody></table></div>
+          <div class="pad" style="border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+            <div class="lbl">Wijzigingen in revisie 6</div>
+            <div class="row" style="gap:10px;font-size:14px"><span class="pill p-warn" style="height:22px">Gewijzigd</span><span>Ma 28-09 · Normale uren · KP-2187 <span class="num muted" style="text-decoration:line-through">8,00</span> → <b class="num">5,00</b></span></div>
+            <div class="row" style="gap:10px;font-size:14px"><span class="pill p-ok" style="height:22px">Toegevoegd</span><span>Ma 28-09 · Normale uren · KP-2190 <b class="num">3,00</b></span></div>
+            <div class="muted" style="font-size:13px">Door J. Bakker (inlener) · 02-10-2026 08:50</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column">
+          <div class="pad" style="border-bottom:1px solid var(--line)"><div class="lbl">Opmerking bij</div><div style="font-weight:600;margin-top:2px">Ma 28-09 · Normale uren · KP-2187</div></div>
+          <div class="pad" style="display:flex;flex-direction:column;gap:14px">
+            <div class="row" style="gap:10px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:50%;background:var(--teal-soft);color:var(--teal-ink);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none">JB</span><div style="min-width:0"><div style="font-size:13px"><b style="font-weight:600">J. Bakker</b> <span class="muted">· inlener · 08:50</span></div><div style="font-size:14px;margin-top:2px">Daan heeft maandagmiddag drie uur in Hal 3 gelast. Die uren heb ik naar KP-2190 gezet.</div></div></div>
+            <div class="row" style="gap:10px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none">FP</span><div style="min-width:0"><div style="font-size:13px"><b style="font-weight:600">Flexpedia backoffice</b> <span class="muted">· 10:12</span></div><div style="font-size:14px;margin-top:2px">Duidelijk, dank. <span style="color:var(--accent-ink);font-weight:500">@Daan Visser</span> klopt dit voor jou?</div></div></div>
+          </div>
+          <div class="pad" style="border-top:1px solid var(--line);margin-top:auto"><div class="inp" style="width:100%;font-family:var(--f-ui);color:var(--muted)">Reageer… gebruik @ om iemand te noemen</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var secs=[].slice.call(document.querySelectorAll('section.v'));
+  var tabs=document.getElementById('tabs');
+  secs.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.type='button';b.className='tab';b.id='tab-'+(i+1);
+    b.setAttribute('role','tab');b.setAttribute('aria-controls',s.id);
+    b.title=s.getAttribute('data-title');
+    b.textContent='Versie '+(i+1);
+    b.addEventListener('click',function(){show(i)});
+    tabs.appendChild(b);
+  });
+  var cur=0;
+  function show(i){
+    cur=(i+secs.length)%secs.length;
+    secs.forEach(function(s,j){s.hidden=j!==cur});
+    [].forEach.call(tabs.children,function(b,j){b.setAttribute('aria-selected',j===cur?'true':'false')});
+    var t=tabs.children[cur]; if(t&&t.scrollIntoView){t.scrollIntoView({block:'nearest',inline:'nearest'})}
+    try{localStorage.setItem('wb-ux-versie',String(cur))}catch(e){}
+  }
+  document.getElementById('prev').addEventListener('click',function(){show(cur-1);window.scrollTo({top:0})});
+  document.getElementById('next').addEventListener('click',function(){show(cur+1);window.scrollTo({top:0})});
+  var start=0, m=/^#v(\d+)$/.exec(location.hash||'');
+  if(m){start=parseInt(m[1],10)-1}else{try{var s=localStorage.getItem('wb-ux-versie');if(s!==null)start=parseInt(s,10)||0}catch(e){}}
+  show(start);
+})();
+</script>
+
+</body>
+</html>
